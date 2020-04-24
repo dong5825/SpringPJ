@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="mybatis.MemberMapper">
+	<select id="selectById" parameterType="String" resultType="Member">
+		select * from member 
+		where email = #{email}
+	</select>
+	
+	<select id="insert_max" resultType="int">
+		select nvl(max(memNum)+1,1) 
+		from member
+	</select>
+	
+	<insert id="insert" parameterType="Member">
+		insert into member (memNum,email,name,passwd,profile) values
+		(#{memNum},#{email},#{name},#{passwd},#{profile})
+	</insert>
+	
+	<select id="getProfileCount" resultType="int">
+		select NVL(count(*),0) 
+		from member
+	</select>
+	
+	<select id="getProfile" resultType="Member">
+		select * 
+		from member
+	</select>
+	
+	<select id="getMember" parameterType="int" resultType="Member">
+		select * 
+		from member
+		where memNum=#{memNum}
+	</select>
+	
+	<select id="getPasswd" parameterType="int" resultType="String">
+		select passwd 
+		from member 
+		where memNum=#{memNum}
+	</select>
+	
+	<update id="updateMember" parameterType="Member">
+		update member set profile=#{profile}, name=#{name}, selfIntroduction=#{selfIntroduction}
+		where memNum=#{memNum}
+	</update>
+	
+	<insert id="insertFollow" parameterType="Follow">
+		insert into follow values (#{memNum},#{followNum})
+	</insert>
+	
+	<select id="checkFollow" parameterType="hashmap" resultType="int">
+		select NVL(count(*),0) 
+		from follow 
+		where memNum=#{memNum} and followNum=#{followNum}
+	</select>
+	
+	<delete id="unFollow" parameterType="Follow">
+		delete from follow where memNum=#{memNum} and followNum=#{followNum}
+	</delete>
+	
+	<select id="followCount" parameterType="int" resultType="int">
+		select count(*) 
+		from follow
+		where memNum=#{memNum}
+	</select>
+	
+	<select id="followerCount" parameterType="int" resultType="int">
+		select count(*) 
+		from follow
+		where followNum=#{memNum}
+	</select>
+	
+	<select id="followerCount2" parameterType="int" resultType="Follow">
+		select followNum, count(*) as count
+		from follow
+		where followNum in (select followNum
+		                    from follow f
+		                    where memNum=#{memNum})
+		group by followNum
+	</select>
+	
+	<select id="followList" parameterType="int" resultType="Member">
+		select m.memnum, m.profile, m.name
+		from follow f, member m
+		where f.FOLLOWNUM=m.MEMNUM and f.memNum=#{memNum}
+	</select>
+	
+	<select id="rcpList" parameterType="int" resultType="Rcp">
+		select r.*, m.* ,nvl(l.likecnt,0) as likecnt
+		from Rcp r, member m,
+		    (select mypick, count(*) as likecnt
+		     from likes
+		     group by mypick) l
+		where r.memNum=m.memNum and r.memNum=#{memNum} and r.rcpnum=l.mypick(+)
+		order by reg_date desc
+	</select>
+	
+	<select id="rcpCount" parameterType="int" resultType="int">
+		select count(*) 
+		from Rcp
+		where memNum=#{memNum}
+	</select>
+	
+	<insert id="insertScrap" parameterType="Scrap">
+		insert into scrap values (#{memnum},#{scrapnum})
+	</insert>	
+	
+	<delete id="delScrap" parameterType="Scrap">
+		delete from scrap where memnum=#{memnum} and scrapnum=#{scrapnum}
+	</delete>
+	
+	<select id="scrapCount" parameterType="int" resultType="int">
+		select count(*) 
+		from scrap
+		where memNum=#{memnum}
+	</select>
+	
+	<select id="scarpList" parameterType="int" resultType="Rcp">
+		select r.*,m.*,s.*,nvl(l.likecnt,0) as likecnt
+		from Rcp r, member m, scrap s,
+		    (select mypick, count(*) as likecnt
+		     from likes
+		     group by mypick) l
+		where r.memNum=m.memNum and r.rcpnum=s.scrapnum and s.memnum=#{memnum} and r.rcpnum=l.mypick(+)
+	</select>
+	
+	<select id="followRcpCount" parameterType="int" resultType="Rcp">
+		select memnum, count(*) as rcpcount
+	    from rcp
+	    where memnum in (select follownum
+	                      from follow f
+	                      where memNum=#{memnum})
+	    group by memnum
+	</select>
+	
+	<select id="followRcp" parameterType="int" resultType="Rcp">
+		select *
+	    from rcp
+	    where memnum in (select follownum
+	                      from follow f
+	                      where memNum=#{memnum})
+	    order by memnum , reg_date desc
+	</select>
+
+<select id="getPasswd1" parameterType="String" resultType="String">
+		select passwd 
+		from member 
+		where email=#{email}
+	</select> 
+	
+<update id="updatepasswd" parameterType="Member">
+		update member set passwd=#{passwd}
+		where email=#{email}
+	</update>
+</mapper>

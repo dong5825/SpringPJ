@@ -1,0 +1,336 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mybatis.RcpMapper">
+	<select id="insert_max" resultType="int">
+		select nvl(max(rcpNum)+1,1)
+		from Rcp
+	</select>
+	
+	<insert id="insert1" parameterType="Rcp">
+		insert into Rcp 
+		values(#{rcpnum},#{title},#{foodname},#{subtitle},#{cookingtime},#{memnum},sysdate,#{thumbnail},#{hashtag},#{category},#{readcount})
+	</insert>
+	
+	<insert id="insertIngredient" parameterType="Ingredient">
+		insert into ingredient 
+		values(#{rcpNum},#{ingredient},#{quantity})
+	</insert>
+	
+	<insert id="insertRcpContent" parameterType="RcpContent">
+		insert into RcpContent 
+		values(#{rcpNum},#{step},#{fileName},#{content})
+	</insert>
+	
+	<select id="getCategory" resultType="Category">
+		select * 
+		from category
+	</select>
+	
+	<select id="getCategory2" parameterType="int" resultType="Category">
+		select *
+		from category
+		where DIVISION_NUM=(
+					select division_num
+					from category
+					where catenum=#{cateNum})
+	</select>
+	
+	<select id="getCategory3" parameterType="int" resultType="Category">
+		select *
+		from category
+		where DIVISION_NUM=#{cateNum}
+	</select>
+	
+	<select id="getDivision" resultType="Division">
+		select *
+		from division		
+	</select>
+	
+	<select id="getDivision2" parameterType="int" resultType="Division">
+		select *
+		from category c, division d
+		where c.DIVISION_NUM=d.DIVISION_NUM and catenum=#{cateNum}
+	</select>
+	
+	<select id="getDivision3" parameterType="int" resultType="Division">
+		select *
+		from division
+		where division_num=#{cateNum}
+	</select>
+	
+	<select id="rcpAllList" resultType="Rcp">
+		select r.*, m.*, nvl(l.likecnt,0) as likecnt
+		from Rcp r, member m,
+        (select mypick, count(*) as likecnt
+         from likes
+         group by mypick) l
+		where r.memNum=m.memNum and r.rcpnum=l.mypick(+)
+		order by reg_date desc
+	</select>
+	
+	<select id="rcpAllCount"  resultType="int">
+		select count(*) 
+		from Rcp
+	</select>
+	
+	<select id="rcpAllList2" parameterType="int" resultType="Rcp">
+		select *
+		from(
+		      Select rcpnum,thumbnail,r.memnum,profile,foodname,cookingtime,title,reg_date,nvl(l.likecnt,0) as likecnt, Regexp_Substr(category,'[^/]+', 1, Level) as catenum, level as lv, lag(level,1,0) over(partition by rcpnum order by level) as lg
+		      From rcp r, member m,
+	              (select mypick, count(*) as likecnt
+	               from likes
+	               group by mypick) l
+		      where r.memNum=m.memNum and r.rcpnum=l.mypick(+)
+		      Connect By Regexp_Substr(category, '[^/]+', 1, Level) Is Not Null
+		    )
+		where lv!=lg and catenum=#{cateNum}
+		order by reg_date desc
+	</select>
+	
+	<select id="rcpAllCount2"  parameterType="int" resultType="int">
+		select count(*)
+		from(
+		      Select rcp.*, Regexp_Substr(category,'[^/]+', 1, Level) as catenum, level as lv, lag(level,1,0) over(partition by rcpnum order by level) as lg
+		      From rcp
+		      Connect By Regexp_Substr(category, '[^/]+', 1, Level) Is Not Null
+		    )
+		where lv!=lg and catenum=#{cateNum}
+	</select>
+	
+	<select id="rcpAllList3" parameterType="int" resultType="Rcp">
+		select r.*,m.*,nvl(l.likecnt,0) as likecnt
+		From rcp r, member m,
+	        (select mypick, count(*) as likecnt
+	         from likes
+	         group by mypick) l
+		where r.memNum=m.memNum and r.rcpnum=l.mypick(+) and
+		      rcpnum in (select rcpnum
+		                 from(Select rcpnum,thumbnail,r.memnum,profile,foodname,title,reg_date,cookingtime,Regexp_Substr(category,'[^/]+', 1, Level) as catenum, level as lv, lag(level,1,0) over(partition by rcpnum order by level) as lg
+		                      From rcp r, member m
+		                      where r.memNum=m.memNum
+		                      Connect By Regexp_Substr(category, '[^/]+', 1, Level) Is Not Null
+		                      )r, category c
+		                 where r.catenum=c.catenum and lv!=lg and division_num=#{cateNum}
+		                 group by rcpnum)
+		order by reg_date desc
+	</select>
+	
+	<select id="rcpAllCount3"  parameterType="int" resultType="int">
+		select count(*)
+		From rcp r, member m
+		where r.memNum=m.memNum and
+		      rcpnum in (select rcpnum
+		                 from(Select rcpnum,thumbnail,r.memnum,profile,foodname,title,reg_date, Regexp_Substr(category,'[^/]+', 1, Level) as catenum, level as lv, lag(level,1,0) over(partition by rcpnum order by level) as lg
+		                      From rcp r, member m
+		                      where r.memNum=m.memNum
+		                      Connect By Regexp_Substr(category, '[^/]+', 1, Level) Is Not Null
+		                      )r, category c
+		                 where r.catenum=c.catenum and lv!=lg and division_num=#{cateNum}
+		                 group by rcpnum)
+	</select>
+	
+	<select id="rcpContent" parameterType="int" resultType="Rcp">
+		select *
+		from Rcp r, member m
+		where r.memNum=m.memNum and rcpNum=#{rcpnum}
+	</select>
+	
+	<select id="rcpContent2" parameterType="int" resultType="RcpContent">
+		select *
+		from RcpContent
+		where rcpNum=#{rcpnum}
+		order by step
+	</select>
+	
+	<select id="rcpContent3" parameterType="int" resultType="Ingredient"> <!-- *로 모든 데이터를 다 받아옴 -->
+		select *
+		from Ingredient
+		where rcpNum=#{rcpnum}
+	</select>
+	
+	<select id="checkScrap" parameterType="hashmap" resultType="int">
+		select NVL(count(*),0) 
+		from scrap 
+		where memnum=#{memnum} and scrapnum=#{scrapnum}
+	</select>
+	
+	<select id="scrapCount" parameterType="int" resultType="int">
+		select count(*) 
+		from scrap
+		where scrapnum=#{rcpnum}
+	</select>
+
+	<update id="addReadcount" parameterType="int">
+		update Rcp set readcount = nvl(readcount, 0) +1 where rcpnum = #{rcpnum}
+	</update>
+	
+	<select id="searchCount" parameterType="String" resultType="int">
+		select count(*)
+		from Rcp r, member m
+		where r.memNum=m.memNum and (foodname like '%'||#{keyword}||'%' or hashtag like '%'||#{keyword}||'%')
+	</select>
+	
+	<select id="searchList"  parameterType="String" resultType="Rcp">
+		select *
+		from Rcp r, member m
+		where r.memNum=m.memNum and (foodname like '%'||#{keyword}||'%' or hashtag like '%'||#{keyword}||'%')
+	</select>
+	
+	<select id="readCountList" resultType="Rcp">
+		select *
+		from Rcp r, member m
+		where r.memNum=m.memNum
+		order by readcount desc
+	</select>
+	
+	<select id="readCountList2" parameterType="int" resultType="Rcp">
+		select *
+		from(
+		      Select rcpnum,thumbnail,r.memnum,profile,foodname,title,reg_date,readcount, Regexp_Substr(category,'[^/]+', 1, Level) as catenum, level as lv, lag(level,1,0) over(partition by rcpnum order by level) as lg
+		      From rcp r, member m
+		      where r.memNum=m.memNum
+		      Connect By Regexp_Substr(category, '[^/]+', 1, Level) Is Not Null
+		    )
+		where lv!=lg and catenum=#{cateNum}
+		order by readcount desc
+	</select>
+	
+	<select id="readCountList3" parameterType="int" resultType="Rcp">
+		select *
+		From rcp r, member m
+		where r.memNum=m.memNum and
+		      rcpnum in (select rcpnum
+		                 from(Select rcpnum,thumbnail,r.memnum,profile,foodname,title,reg_date, Regexp_Substr(category,'[^/]+', 1, Level) as catenum, level as lv, lag(level,1,0) over(partition by rcpnum order by level) as lg
+		                      From rcp r, member m
+		                      where r.memNum=m.memNum
+		                      Connect By Regexp_Substr(category, '[^/]+', 1, Level) Is Not Null
+		                      )r, category c
+		                 where r.catenum=c.catenum and lv!=lg and division_num=#{cateNum}
+		                 group by rcpnum)
+		order by readcount desc
+	</select>
+	
+	<select id="getNutrient" resultType="Nutrient">
+		select *
+		from Nutrient	
+	</select>
+	
+	<select id="rcpNutrient" parameterType="int" resultType="Nutrient">
+		select sum((SUBSTR(quantity,INSTR(quantity,'/')+1)/100)*energy) as energy,
+		      sum((SUBSTR(quantity,INSTR(quantity,'/')+1)/100)*protein) as protein,
+		      sum((SUBSTR(quantity,INSTR(quantity,'/')+1)/100)*fat) as fat,
+		      sum((SUBSTR(quantity,INSTR(quantity,'/')+1)/100)*carb) as carb,
+		      sum((SUBSTR(quantity,INSTR(quantity,'/')+1)/100)*sugar) as sugar,
+		      sum((SUBSTR(quantity,INSTR(quantity,'/')+1)/100)*cal) as cal,
+		      sum((SUBSTR(quantity,INSTR(quantity,'/')+1)/100)*na) as na,
+		      sum((SUBSTR(quantity,INSTR(quantity,'/')+1)/100)*chole) as chole
+		from ingredient i, nutrient n
+		where i.INGREDIENT=n.food and rcpnum=#{rcpnum}
+	</select>
+	
+	<select id="recommend"  parameterType="java.util.ArrayList" resultType="Rcp">
+		select r.*,m.*,nvl(l.likecnt,0) as likecnt
+		from Rcp r, member m,
+	        (select mypick, count(*) as likecnt
+	         from likes
+	         group by mypick) l
+		where r.memNum=m.memNum and r.rcpnum=l.mypick(+) and
+		        rcpnum in (select rcpnum
+		                    from (select rcpnum, LISTAGG(nutrient_num,'/') WITHIN GROUP(ORDER BY nutrient_num) AS nutrient_num
+		                          from ingredient i, nutrient n
+		                          where i.INGREDIENT=n.food
+		                          group by rcpnum)
+		                    where <foreach collection="array" item="item"  open="(" close=")" separator="and">
+							        	nutrient_num like '%'||#{item}||'%'
+							      </foreach>)
+	</select>
+	
+	<select id="recommendCount" parameterType="java.util.ArrayList" resultType="int">
+		select count(*)
+		from Rcp r, member m
+		where r.memNum=m.memNum and 
+		        rcpnum in (select rcpnum
+		                    from (select rcpnum, LISTAGG(nutrient_num,'/') WITHIN GROUP(ORDER BY nutrient_num) AS nutrient_num
+		                          from ingredient i, nutrient n
+		                          where i.INGREDIENT=n.food
+		                          group by rcpnum)
+		                    where <foreach collection="array" item="item"  open="(" close=")" separator="and">
+							        	nutrient_num like '%'||#{item}||'%'
+							      </foreach>)
+	</select>
+	
+	<select id="recNutrient" parameterType="java.util.ArrayList" resultType="Nutrient">
+		select *
+		from Nutrient
+		where nutrient_num in 
+			  <foreach collection="array" item="item"  open="(" close=")" separator=",">
+				 #{item}
+			  </foreach>
+	</select>
+	
+	<select id="memberCnt"  resultType="int">
+		select count(*) 
+		from member
+	</select>
+	
+	<select id="rcpReadCnt"  resultType="int">
+		select nvl(sum(readcount),0)
+		from rcp
+	</select>
+	
+	<select id="top4" resultType="Rcp">
+		<![CDATA[
+		select *
+		from (select ROW_NUMBER() OVER (ORDER BY scrapcount DESC) AS rank, r.*, s.*
+		      from rcp r, 
+		          (select scrapnum, count(*) as scrapcount
+		           from scrap
+		           group by scrapnum) s
+		      where r.rcpnum=s.scrapnum)
+		where rank<5
+		]]>
+	</select>
+	
+	<insert id="addLike" parameterType="Likes">
+		insert into likes
+		values(#{memnum}, #{mypick})
+	</insert>
+
+	<!-- 전에 좋아요를 눌렀는 지 여부 확인 -->
+	<select id="checkLike" parameterType="hashmap" resultType="int">
+		select NVL(count(*),0) 
+		from Likes 
+		where memnum=#{memnum} and mypick=#{mypick}
+	</select>
+	
+	<delete id="cancelLike" parameterType="Likes">
+		delete from likes where memnum = #{memnum} and mypick=#{mypick}
+	</delete>
+	
+	<!-- 해당 게시글이 가지고 있는 좋아요의 전체 수  -->
+	<select id="likeCount" resultType="Likes">
+		select nvl(count(*), 0) from likes group by rcpnum
+	</select>
+	
+	<insert id="insertComment" parameterType="Comments">
+		insert into comments
+		values (#{commentnum}, #{rcpnum}, #{memnum}, #{content}, sysdate)
+	</insert>
+	
+	<select id="commentnum_max" resultType="int">
+		select nvl(max(commentnum)+1, 1)
+		from comments
+	</select>
+	
+	<select id="readComment" parameterType="int" resultType="Comments">
+		select * from member m, comments c where m.memNum = c.memnum and c.rcpnum=#{rcpnum} order by reg_date desc
+	</select>
+	
+	<delete id="deleteComment" parameterType="int">
+		delete from comments where commentnum= #{commentnum}
+	</delete>
+	
+</mapper>

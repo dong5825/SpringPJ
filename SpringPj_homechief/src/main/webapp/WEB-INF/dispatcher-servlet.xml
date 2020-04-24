@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+	http://www.springframework.org/schema/beans/spring-beans.xsd
+	http://www.springframework.org/schema/context
+	http://www.springframework.org/schema/context/spring-context.xsd
+	http://www.springframework.org/schema/mvc
+	http://www.springframework.org/schema/mvc/spring-mvc.xsd">
+	
+	<mvc:annotation-driven/>
+	
+	<context:component-scan base-package="controller, service"/>
+	
+	<mvc:default-servlet-handler/>
+	<!-- 컨트롤러 타지 않고 바로 리턴하는것  -->
+	
+	<mvc:annotation-driven/>
+	<!-- 컨트롤러에서 어노테이션 로딩하겠다 얘기 -->
+	
+	<mvc:view-controller path="/index" view-name="index1"/>
+	
+	<bean id="viewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="prefix" value="/view/"/>
+		<property name="suffix" value=".jsp"/>
+	</bean>
+	
+	<!-- 파일 업로드 -->
+	<bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+		<property name="defaultEncoding" value="utf-8"></property>
+	</bean>
+	
+	<!-- 이미지 url이 들어오면 로케이션에서 이미지를 찾는다 -->
+	<mvc:resources location="/images/, /WEB-INF/resources/" mapping="/images/**" cache-period="60"/>
+																					<!-- 캐시유효기간 60초 -->
+	<bean class="mybatis.AbstractRepository">
+		<constructor-arg>
+			<value>Oracle</value>
+		</constructor-arg>
+	</bean>
+		
+	<bean id="messageSource"
+		class="org.springframework.context.support.ResourceBundleMessageSource">
+		<property name="basenames">
+			<list>
+				<value>message.message</value>
+			</list>
+		</property>
+		<property name="defaultEncoding" value="UTF-8" />
+	</bean>
+	<bean id="localeResolver" class="org.springframework.web.servlet.i18n.SessionLocaleResolver"/>
+	<mvc:interceptors>
+		<bean class="org.springframework.web.servlet.i18n.LocaleChangeInterceptor">
+			<property name="paramName" value="language"/>
+		</bean>
+	</mvc:interceptors>
+</beans>

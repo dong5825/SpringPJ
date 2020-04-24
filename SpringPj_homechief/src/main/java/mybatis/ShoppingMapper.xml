@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	
+<mapper namespace="mybatis.dao.ShoppingMapper">
+	<cache />
+	
+	<insert id="insertCart"	parameterType="Cart">
+		INSERT INTO cart VALUES(#{cartNum}, #{memNum}, #{thumbnail}, #{productName}, #{qty}, #{price})
+	</insert>
+	
+	<select id="getCart" parameterType="int" resultType="Cart">
+		SELECT
+			*
+		FROM Cart
+		WHERE memNum = #{memNum}
+		<!-- ORDER BY cartNum DESC; -->
+	</select>
+	
+	<select id="getCountCart" parameterType="int" resultType="int">
+		SELECT
+			count(*)
+		FROM Cart
+		WHERE memNum = #{memNum}
+		<!-- ORDER BY cartNum DESC; -->
+	</select>
+	
+	<select id="getSaleintoJjim" parameterType="int" resultType="Sale">
+		SELECT
+			*
+		FROM Sale
+		WHERE saleNum = #{saleNum}
+	</select>
+	
+	<select id="getCartintoJjim" parameterType="int" resultType="Cart">
+		SELECT
+			*
+		FROM Cart
+		WHERE cartNum = #{cartNum}
+	</select>
+	
+	<select id="checkjjim" parameterType="hashmap" resultType="int">
+		SELECT
+			count(*)
+		FROM Jjim
+		WHERE memNum = #{memNum}
+		AND productName = #{productName}
+	</select>
+	
+	<insert id="insertjjim"	parameterType="Jjim">
+		INSERT INTO jjim VALUES(#{jjimNum}, #{memNum}, #{thumbnail} , #{productName}, #{price}, sysdate)
+	</insert>
+	
+	<select id="getJjimlist" parameterType="int" resultType="Jjim">
+		SELECT
+			*
+		FROM Jjim
+		WHERE memNum = #{memNum}
+		<!-- ORDER BY cartNum DESC; -->
+	</select>
+	
+	<delete id="deleteJjimvalue" parameterType="int" >
+		DELETE FROM jjim
+		WHERE jjimNum = #{jjimNum}
+	</delete>
+	
+	<delete id="deleteCartvalue" parameterType="int" >
+		DELETE FROM cart
+		WHERE cartNum = #{cartNum}
+	</delete>
+	
+	<select id="getSale_nonParam" parameterType="hashmap" resultType="Sale">
+		SELECT
+			*
+		FROM sale
+		WHERE saleNum between #{startRow} and #{endRow}	
+	</select>
+	
+	<select id="getSale_nonParam_Cate" parameterType="hashmap" resultType="Sale">
+		SELECT
+			*
+		FROM (select rownum rnum, a.*
+			  from(SELECT
+					 *
+				   FROM sale
+				   WHERE categorynum = #{category})a)
+		WHERE rnum between #{startRow} and #{endRow}	
+	</select>
+	
+	<select id="getorderproductlist" parameterType="Long" resultType="OrderProduct">
+		SELECT
+			*
+		FROM Order_product
+		WHERE ordernum = #{orderNum}
+		<!-- ORDER BY cartNum DESC; -->
+	</select>
+	<select id="getorderinfolist" parameterType="int" resultType="OrderInfo">
+		SELECT
+			ordernum, recipient, address, amount, howtopay
+		FROM Order_info
+		WHERE memNum = #{memNum}
+		order by orderdate desc
+		<!-- ORDER BY cartNum DESC; -->
+	</select>
+	
+	<select id="getCountSale" resultType="int">
+		SELECT
+			count(*)
+		FROM sale
+	</select>
+	
+	<select id="getCountSale_cate" parameterType="int" resultType="int">
+		SELECT
+			count(*)
+		FROM sale
+		WHERE categorynum = #{category}
+	</select>
+	
+	<select id="getSale" parameterType="int" resultType="Sale">
+		SELECT
+			*
+		FROM sale
+		WHERE saleNum = #{saleNum}
+	</select>
+	
+	<select id="getSalecategory" resultType="Salecategory">
+		SELECT
+			*
+		FROM sale_category 
+		ORDER BY cateNum asc
+	</select>
+		
+	<select id="getMember" parameterType="int" resultType="Member">
+		select * 
+		from member
+		where memNum=#{memNum}
+	</select>
+	
+	<select id="getAddress" parameterType="int" resultType="MemAddress">
+		select * 
+		from mem_address
+		where memNum=#{memNum}
+	</select>
+	
+	<select id="getAddress1" parameterType="int" resultType="MemAddress">
+		select * 
+		from mem_address
+		where addressNum=#{addressNum}
+	</select>
+	
+	<update id="updateSale" parameterType="hashmap">
+		update sale
+		set sales = sales + #{qty}, stock = stock - #{qty}
+		where productname = #{productname}
+	</update>
+
+	
+	
+	<insert id="insertMemaddr"	parameterType="MemAddress">
+		INSERT INTO mem_address VALUES(#{addressNum}, #{recipient}, #{memNum}, #{memName}, #{address}, #{zipcode})
+	</insert>
+	
+	<insert id="insertOrderProduct"	parameterType="OrderProduct">
+		INSERT INTO order_product VALUES(#{productNum}, #{orderNum},#{thumbnail}, #{productName}, #{qty}, #{price})
+	</insert>
+	
+	<insert id="insertOrderInfo"	parameterType="OrderInfo">
+		INSERT INTO order_info VALUES(#{orderNum}, #{memNum}, sysdate , #{amount}, #{memName}, #{recipient}, #{address}, #{zipcode}, #{memo}, #{howtopay})
+	</insert>
+	
+	
+	
+	<select id="insert_maxCart" resultType="int">
+		SELECT
+			nvl(max(cartNum)+1,0) 
+		FROM Cart
+	</select>
+	<select id="insert_maxJjim" resultType="int">
+		SELECT
+			nvl(max(jjimNum)+1,0) 
+		FROM Jjim
+	</select>
+	<select id="insert_maxOP" resultType="int">
+		SELECT
+			nvl(max(productNum)+1,0) 
+		FROM order_product
+	</select>
+	<select id="insert_maxMA" resultType="int">
+		SELECT
+			nvl(max(addressNum)+1,0) 
+		FROM mem_address
+	</select>
+	
+	<select id="getSale_saledesc" resultType="Sale">
+      SELECT * 
+      FROM (select rownum rnum, a.*  
+           from(select * 
+                 from sale 
+                 order by sales desc, productname asc)
+           a)
+      WHERE rnum between 1 and 8
+   </select>
+	
+</mapper>	

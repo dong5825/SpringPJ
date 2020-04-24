@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration
+	PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+	<settings>
+      <setting name="jdbcTypeForNull" value="NULL"/>
+   	</settings>
+   	
+	<typeAliases>							<!-- resultType -->
+		<typeAlias type="model.Rcp" alias="Rcp"/>
+		<typeAlias type="model.Cart" alias="Cart"/>
+		<typeAlias type="model.OrderInfo" alias="OrderInfo" />
+		<typeAlias type="model.OrderProduct" alias="OrderProduct" />
+		<typeAlias type="model.MemAddress" alias="MemAddress" />
+		<typeAlias type="model.Sale" alias="Sale" />
+		<typeAlias type="model.Salecategory" alias="Salecategory" />
+		<typeAlias type="model.Jjim" alias="Jjim" />
+		<typeAlias type="model.Brand" alias="Brand" />
+		<typeAlias type="model.Member" alias="Member" />
+		<typeAlias type="model.Follow" alias="Follow" />
+		<typeAlias type="model.RcpContent" alias="RcpContent"/>
+		<typeAlias type="model.Ingredient" alias="Ingredient"/>
+		<typeAlias type="model.Category" alias="Category"/>
+		<typeAlias type="model.Division" alias="Division"/>
+		<typeAlias type="model.Scrap" alias="Scrap"/>
+		<typeAlias type="model.Nutrient" alias="Nutrient"/>
+		<typeAlias type="model.Likes" alias="Likes"/>
+		<typeAlias type="model.Comments" alias="Comments"/>
+	</typeAliases>
+	<environments default="development">
+		<environment id="development">
+			<transactionManager type="JDBC"/>
+			<dataSource type="POOLED">
+				<property name="driver" value="oracle.jdbc.driver.OracleDriver"/>
+				<property name="url" value="jdbc:oracle:thin:@localhost:1521:orcl"/>
+				<property name="username" value="scott"/>
+				<property name="password" value="1111"/>
+			</dataSource>
+		</environment>
+	</environments>
+	<mappers>
+		<mapper resource="mybatis/ShoppingMapper.xml"/>
+		<mapper resource="mybatis/BrandMapper.xml"/>
+		<mapper resource="mybatis/MemberMapper.xml" />
+		<mapper resource="mybatis/RcpMapper.xml" />
+	</mappers>
+</configuration>
